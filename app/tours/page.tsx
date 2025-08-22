@@ -160,6 +160,40 @@ export default function ToursPage() {
   const categories = ['All Categories', 'Beach & Islands', 'Cultural & Adventure', 'Wildlife & Culture', 'Luxury & Beach', 'Cultural'];
   const durations = ['All Durations', '5-7 days', '8-10 days', '11+ days'];
 
+  // Filter and search logic
+  const filteredTours = allTours.filter(tour => {
+    const matchesSearch = tour.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         tour.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         tour.highlights.some(highlight => 
+                           highlight.toLowerCase().includes(searchTerm.toLowerCase())
+                         );
+    
+    const matchesCategory = selectedCategory === 'All Categories' || tour.category === selectedCategory;
+    
+    const matchesDuration = selectedDuration === 'All Durations' || 
+                           (selectedDuration === '5-7 days' && parseInt(tour.duration) <= 7) ||
+                           (selectedDuration === '8-10 days' && parseInt(tour.duration) >= 8 && parseInt(tour.duration) <= 10) ||
+                           (selectedDuration === '11+ days' && parseInt(tour.duration) >= 11);
+    
+    return matchesSearch && matchesCategory && matchesDuration;
+  });
+
+  // Sort tours based on selected criteria
+  const sortedTours = [...filteredTours].sort((a, b) => {
+    switch (sortBy) {
+      case 'Price: Low to High':
+        return parseInt(a.price.replace(/[^\d]/g, '')) - parseInt(b.price.replace(/[^\d]/g, ''));
+      case 'Price: High to Low':
+        return parseInt(b.price.replace(/[^\d]/g, '')) - parseInt(a.price.replace(/[^\d]/g, ''));
+      case 'Duration: Short to Long':
+        return parseInt(a.duration) - parseInt(b.duration);
+      case 'Rating: High to Low':
+        return b.rating - a.rating;
+      default: // Popularity
+        return b.trending ? 1 : -1;
+    }
+  });
+
   return (
     <PageTransition>
       <Header />
@@ -223,23 +257,23 @@ export default function ToursPage() {
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               <Card className="border-0 shadow-2xl bg-white/10 backdrop-blur-xl">
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/60" />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="relative sm:col-span-2 lg:col-span-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-white/60" />
                       <input
                         type="text"
                         placeholder="Search destinations..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 backdrop-blur-sm"
+                        className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 bg-white/20 border border-white/30 rounded-xl text-sm sm:text-base text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 backdrop-blur-sm"
                       />
                     </div>
                     
                     <select 
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 backdrop-blur-sm"
+                      className="px-3 sm:px-4 py-2.5 sm:py-3 bg-white/20 border border-white/30 rounded-xl text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-white/50 backdrop-blur-sm"
                     >
                       {categories.map(category => (
                         <option key={category} value={category} className="text-gray-900">
@@ -251,7 +285,7 @@ export default function ToursPage() {
                     <select 
                       value={selectedDuration}
                       onChange={(e) => setSelectedDuration(e.target.value)}
-                      className="px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 backdrop-blur-sm"
+                      className="px-3 sm:px-4 py-2.5 sm:py-3 bg-white/20 border border-white/30 rounded-xl text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-white/50 backdrop-blur-sm"
                     >
                       {durations.map(duration => (
                         <option key={duration} value={duration} className="text-gray-900">
@@ -285,10 +319,12 @@ export default function ToursPage() {
           >
             <div>
               <h2 className="font-seasons text-3xl lg:text-4xl font-light text-foreground mb-2">
-                {allTours.length} Amazing Tours Available
+                {sortedTours.length} Amazing Tours Available
               </h2>
               <p className="text-muted-foreground">
-                Showing all available tours and experiences
+                {searchTerm || selectedCategory !== 'All Categories' || selectedDuration !== 'All Durations' 
+                  ? `Showing filtered results` 
+                  : 'Showing all available tours and experiences'}
               </p>
             </div>
             
@@ -309,13 +345,13 @@ export default function ToursPage() {
 
           {/* Tours Grid */}
           <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
           >
-            {allTours.map((tour, index) => (
+            {sortedTours.map((tour, index) => (
               <motion.div
                 key={tour.id}
                 variants={cardVariants}
@@ -324,7 +360,7 @@ export default function ToursPage() {
               >
                 <Card className="group relative overflow-hidden border-0 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-500 h-full">
                   {/* Image Container */}
-                  <div className="relative h-80 overflow-hidden">
+                  <div className="relative h-64 sm:h-72 lg:h-80 overflow-hidden">
                     <Image
                       src={tour.image}
                       alt={tour.title}
@@ -348,22 +384,7 @@ export default function ToursPage() {
                       )}
                     </div>
 
-                    {/* Price & Discount */}
-                    <div className="absolute top-4 right-4 text-right">
-                      <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 mb-2">
-                        <div className="font-bold text-foreground">{tour.price}</div>
-                        {tour.originalPrice && (
-                          <div className="text-xs text-muted-foreground line-through">
-                            {tour.originalPrice}
-                          </div>
-                        )}
-                      </div>
-                      {tour.originalPrice && (
-                        <Badge className="bg-red-500 text-white">
-                          SAVE {Math.round((1 - parseInt(tour.price.replace(/[^\d]/g, '')) / parseInt(tour.originalPrice.replace(/[^\d]/g, ''))) * 100)}%
-                        </Badge>
-                      )}
-                    </div>
+
 
                     {/* Rating */}
                     <div className="absolute bottom-4 left-4">
@@ -375,11 +396,11 @@ export default function ToursPage() {
                     </div>
                   </div>
 
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="font-seasons text-2xl font-medium text-foreground mb-1 group-hover:text-primary transition-colors duration-300">
+                        <h3 className="font-seasons text-lg sm:text-xl lg:text-2xl font-medium text-foreground mb-1 group-hover:text-primary transition-colors duration-300">
                           {tour.title}
                         </h3>
                         <div className="flex items-center text-muted-foreground">
@@ -428,11 +449,14 @@ export default function ToursPage() {
 
                     {/* CTA */}
                     <Button 
-                      asChild 
                       className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 group/btn"
+                      onClick={() => {
+                        // Show itinerary modal or handle itinerary view
+                        alert('Itinerary coming soon!');
+                      }}
                     >
-                      <Link href={`/tours/${tour.id}`} className="flex items-center justify-center">
-                        View Details
+                      <div className="flex items-center justify-center">
+                        View Itinerary
                         <motion.div
                           className="ml-2"
                           whileHover={{ x: 5 }}
@@ -440,7 +464,7 @@ export default function ToursPage() {
                         >
                           <ArrowRight className="h-4 w-4" />
                         </motion.div>
-                      </Link>
+                      </div>
                     </Button>
                   </CardContent>
 

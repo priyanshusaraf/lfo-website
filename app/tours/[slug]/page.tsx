@@ -1,7 +1,9 @@
+'use client';
+
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Metadata } from 'next'
+import { motion } from 'framer-motion'
 import { 
   MapPin, 
   Calendar, 
@@ -12,7 +14,8 @@ import {
   Heart,
   Share2,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  Download
 } from 'lucide-react'
 
 const tours = {
@@ -169,25 +172,7 @@ type TourPageProps = {
   params: { slug: string }
 }
 
-export async function generateMetadata({ params }: TourPageProps): Promise<Metadata> {
-  const tour = tours[params.slug as keyof typeof tours];
-  
-  if (!tour) {
-    return {
-      title: 'Tour Not Found | Let\'s Fly Off',
-    };
-  }
 
-  return {
-    title: `${tour.title} - ${tour.duration} | Let's Fly Off`,
-    description: tour.description,
-    openGraph: {
-      title: `${tour.title} - Adventure Tour`,
-      description: tour.description,
-      images: [tour.images[0]],
-    },
-  };
-}
 
 export default function TourPage({ params }: TourPageProps) {
   const tour = tours[params.slug as keyof typeof tours];
@@ -198,15 +183,58 @@ export default function TourPage({ params }: TourPageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
+      {/* Hero Section with Video */}
       <section className="relative h-[70vh] overflow-hidden">
-        <Image
-          src={tour.images[0]}
-          alt={tour.title}
-          fill
-          className="object-cover"
-          priority
-        />
+        {/* Video Background for completed trips */}
+        {(tour.id === 'thailand-adventure' || tour.id === 'bali-adventure' || tour.id === 'thailand-skydiving') ? (
+          <div className="absolute inset-0">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            >
+              <source 
+                src={tour.id === 'thailand-adventure' 
+                  ? "/videos/thailand.mp4" 
+                  : tour.id === 'bali-adventure'
+                  ? "/videos/bali.mp4"
+                  : "/videos/thailand-skydiving.mp4"} 
+                type="video/mp4" 
+              />
+              {/* Fallback image */}
+              <Image
+                src={tour.images[0]}
+                alt={tour.title}
+                fill
+                className="object-cover"
+                priority
+              />
+            </video>
+            {/* Video overlay text */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <motion.h2 
+                className="font-seasons text-3xl md:text-5xl lg:text-6xl font-light text-white text-center px-4"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1.2, delay: 0.5 }}
+              >
+                {tour.id === 'thailand-adventure' && "Introducing Thailand"}
+                {tour.id === 'bali-adventure' && "Experience Bali Memories"}
+                {tour.id === 'thailand-skydiving' && "Relive the Adrenaline"}
+              </motion.h2>
+            </div>
+          </div>
+        ) : (
+          <Image
+            src={tour.images[0]}
+            alt={tour.title}
+            fill
+            className="object-cover"
+            priority
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         
         <div className="relative z-10 h-full flex items-end">
@@ -294,7 +322,30 @@ export default function TourPage({ params }: TourPageProps) {
 
             {/* Itinerary */}
             <section>
-              <h2 className="font-display text-3xl font-bold text-gray-900 mb-6">Day-by-Day Itinerary</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                <h2 className="font-display text-3xl font-bold text-gray-900 mb-4 sm:mb-0">Day-by-Day Itinerary</h2>
+                <button 
+                  onClick={() => {
+                    // Create a simple PDF download function
+                    const element = document.createElement('a');
+                    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(
+                      `${tour.title} Itinerary\n\n` + 
+                      tour.itinerary.map(day => 
+                        `Day ${day.day}: ${day.title}\n${day.description}\n\n`
+                      ).join('')
+                    ));
+                    element.setAttribute('download', `${tour.title.replace(/\s+/g, '-').toLowerCase()}-itinerary.txt`);
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+                    element.click();
+                    document.body.removeChild(element);
+                  }}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Itinerary
+                </button>
+              </div>
               <div className="space-y-6">
                 {tour.itinerary.map((day) => (
                   <div key={day.day} className="border border-gray-200 rounded-lg p-6">

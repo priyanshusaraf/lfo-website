@@ -116,7 +116,7 @@ export default function SimpleToursCarousel() {
 
         {/* Tours Grid */}
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-16"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -131,7 +131,7 @@ export default function SimpleToursCarousel() {
             >
               <Card className="group relative overflow-hidden border-0 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-500 h-full">
                 {/* Image Container */}
-                <div className="relative h-80 overflow-hidden">
+                <div className="relative h-64 sm:h-72 lg:h-80 overflow-hidden">
                   <Image
                     src={tour.image}
                     alt={tour.title}
@@ -150,19 +150,6 @@ export default function SimpleToursCarousel() {
                         Trending
                       </Badge>
                     )}
-                    <Badge variant="secondary" className="bg-black/50 text-white border-0 backdrop-blur-sm">
-                      {tour.discount}
-                    </Badge>
-                  </div>
-
-                  {/* Price */}
-                  <div className="absolute top-4 right-4">
-                    <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 text-right">
-                      <div className="text-sm text-muted-foreground line-through">
-                        {tour.originalPrice}
-                      </div>
-                      <div className="font-bold text-foreground">{tour.price}</div>
-                    </div>
                   </div>
 
                   {/* Rating */}
@@ -175,11 +162,11 @@ export default function SimpleToursCarousel() {
                   </div>
                 </div>
 
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-seasons text-2xl font-medium text-foreground mb-1 group-hover:text-primary transition-colors duration-300">
+                      <h3 className="font-seasons text-lg sm:text-xl lg:text-2xl font-medium text-foreground mb-1 group-hover:text-primary transition-colors duration-300">
                         {tour.title}
                       </h3>
                       <div className="flex items-center text-muted-foreground">
@@ -228,11 +215,14 @@ export default function SimpleToursCarousel() {
 
                   {/* CTA Button */}
                   <Button 
-                    asChild 
                     className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 group/btn"
+                    onClick={() => {
+                      // Show itinerary modal or handle itinerary view
+                      alert('Itinerary coming soon!');
+                    }}
                   >
-                    <Link href={`/tours/${tour.id}`} className="flex items-center justify-center">
-                      View Details
+                    <div className="flex items-center justify-center">
+                      View Itinerary
                       <motion.div
                         className="ml-2"
                         whileHover={{ x: 5 }}
@@ -240,7 +230,7 @@ export default function SimpleToursCarousel() {
                       >
                         <ArrowRight className="h-4 w-4" />
                       </motion.div>
-                    </Link>
+                    </div>
                   </Button>
                 </CardContent>
 

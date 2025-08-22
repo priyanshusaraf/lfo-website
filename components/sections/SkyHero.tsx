@@ -94,51 +94,31 @@ export default function SkyHero() {
             transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
             className="mb-8 perspective-1000"
           >
-            <motion.div
-              whileHover={{ 
-                rotateX: 10, 
-                rotateY: 10, 
-                scale: 1.05,
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
-              }}
-              className="inline-block"
+            <Badge 
+              variant="secondary" 
+              className="bg-white/20 text-white border-white/30 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg"
             >
-              <Badge 
-                variant="secondary" 
-                className="bg-white/20 text-white border-white/30 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Award-Winning Travel Experiences
-              </Badge>
-            </motion.div>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Award-Winning Travel Experiences
+            </Badge>
           </motion.div>
 
-          {/* Main Heading with 3D Transform */}
+          {/* Main Heading */}
           <motion.h1 
             className="font-seasons text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-light text-white tracking-tight leading-tight mb-6"
             initial={{ opacity: 0, y: 100, rotateX: 90 }}
             animate={{ opacity: 1, y: 0, rotateX: 0 }}
             transition={{ duration: 1.2, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-            whileHover={{ 
-              scale: 1.02,
-              textShadow: "0 0 20px rgba(255,255,255,0.5)"
-            }}
-            style={{
-              textShadow: "0 4px 8px rgba(0,0,0,0.3), 0 8px 16px rgba(0,0,0,0.2)"
-            }}
           >
             LET'S FLY OFF
           </motion.h1>
           
-          {/* Subtitle with depth */}
+          {/* Subtitle */}
           <motion.p 
             className="text-lg sm:text-xl md:text-2xl text-white/90 mb-12 max-w-4xl mx-auto font-light leading-relaxed px-4"
-            initial={{ opacity: 0, y: 50, z: -100 }}
-            animate={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            style={{
-              textShadow: "0 2px 4px rgba(0,0,0,0.3)"
-            }}
           >
             Exclusive • Invite-Only • Elite Travel Experiences
           </motion.p>
@@ -164,14 +144,7 @@ export default function SkyHero() {
                 }}
                 whileHover={{ 
                   scale: 1.05, 
-                  backgroundColor: "rgba(255,255,255,0.15)",
-                  rotateY: 5,
-                  rotateX: 5,
-                  boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
-                }}
-                style={{
-                  transformStyle: "preserve-3d",
-                  boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
+                  backgroundColor: "rgba(255,255,255,0.15)"
                 }}
               >
                 <div className="flex items-center space-x-2 sm:space-x-3 text-white">

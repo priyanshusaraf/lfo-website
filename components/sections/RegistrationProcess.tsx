@@ -54,11 +54,25 @@ const steps = [
 export default function RegistrationProcess() {
   const [activeStep, setActiveStep] = useState(1);
   const [allowScroll, setAllowScroll] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState<{[key: number]: boolean}>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start end", "end start"]
   });
+
+  // Preload all images
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      steps.forEach((step, index) => {
+        const img = document.createElement('img');
+        img.onload = () => {
+          setImageLoaded(prev => ({ ...prev, [step.id]: true }));
+        };
+        img.src = step.image;
+      });
+    }
+  }, []);
   
   // Calculate airplane position based on scroll - only move when allowed
   const airplaneY = useTransform(
@@ -168,15 +182,21 @@ export default function RegistrationProcess() {
                 className="w-full h-full"
               >
                 <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-2xl ring-2 ring-blue-500/20">
+                  {/* Loading placeholder */}
+                  {!imageLoaded[activeStep] && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-purple-100 animate-pulse" />
+                  )}
+                  
                   {/* Background Image */}
                   <Image
                     src={steps[activeStep - 1]?.image || ''}
                     alt={steps[activeStep - 1]?.title || ''}
                     fill
-                    className="object-cover transition-all duration-1000"
-                    priority={activeStep <= 2}
-                    quality={90}
+                    className={`object-cover transition-all duration-500 ${imageLoaded[activeStep] ? 'opacity-100' : 'opacity-0'}`}
+                    priority={true}
+                    quality={85}
                     sizes="(max-width: 768px) 100vw, 50vw"
+                    onLoad={() => setImageLoaded(prev => ({ ...prev, [activeStep]: true }))}
                   />
                   
                   {/* Overlay */}
@@ -253,7 +273,7 @@ export default function RegistrationProcess() {
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            Join thousands of travelers who have discovered amazing destinations with Let's F Off.
+            Join thousands of travelers who have discovered amazing destinations with Let's Fly Off.
           </motion.p>
           <motion.button 
             className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-full hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
