@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,8 @@ import Header from '@/components/layout/Header';
 
 export default function SkyHero() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"]
@@ -18,6 +20,10 @@ export default function SkyHero() {
   const textY = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
   const overlayOpacity = useTransform(scrollYProgress, [0, 1], [0.4, 0.8]);
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const stats = [
     { label: 'Exclusive Destinations', value: '15+' },
@@ -48,29 +54,31 @@ export default function SkyHero() {
         />
       </motion.div>
 
-      {/* Floating Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 bg-white/20 rounded-full"
-            initial={{ 
-              x: Math.random() * window?.innerWidth || 1920,
-              y: Math.random() * window?.innerHeight || 1080,
-            }}
-            animate={{
-              x: (Math.random() * window?.innerWidth || 1920) + 100,
-              y: (Math.random() * window?.innerHeight || 1080) + 100,
-            }}
-            transition={{
-              duration: 20 + Math.random() * 10,
-              repeat: Infinity,
-              repeatType: "reverse",
-              ease: "linear"
-            }}
-          />
-        ))}
-      </div>
+      {/* Floating Elements - Only render on client */}
+      {isMounted && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-white/20 rounded-full"
+              initial={{ 
+                x: Math.random() * 1920,
+                y: Math.random() * 1080,
+              }}
+              animate={{
+                x: (Math.random() * 1920) + 100,
+                y: (Math.random() * 1080) + 100,
+              }}
+              transition={{
+                duration: 20 + Math.random() * 10,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "linear"
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Main Content with Parallax */}
       <motion.div 
