@@ -1,15 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { 
-  Plane, 
   Instagram, 
   MessageCircle, 
   UserCheck, 
   CreditCard,
-  CheckCircle
+  ChevronRight
 } from 'lucide-react';
 
 const steps = [
@@ -52,240 +51,209 @@ const steps = [
 ];
 
 export default function RegistrationProcess() {
-  const [activeStep, setActiveStep] = useState(1);
-  const [allowScroll, setAllowScroll] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState<{[key: number]: boolean}>({});
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"]
-  });
-
-  // Preload all images
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      steps.forEach((step, index) => {
-        const img = document.createElement('img');
-        img.onload = () => {
-          setImageLoaded(prev => ({ ...prev, [step.id]: true }));
-        };
-        img.src = step.image;
-      });
-    }
-  }, []);
-  
-  // Calculate airplane position based on scroll - only move when allowed
-  const airplaneY = useTransform(
-    scrollYProgress, 
-    [0, 0.25, 0.5, 0.75, 1], 
-    [0, 117, 234, 351, 468]
-  );
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = scrollYProgress.on("change", (value) => {
-      // Define thresholds for each step - tighter control
-      const thresholds = [0, 0.25, 0.5, 0.75, 1];
-      
-      let newActiveStep = 1;
-      for (let i = 0; i < thresholds.length; i++) {
-        if (value >= thresholds[i]) {
-          newActiveStep = i + 1;
-        }
-      }
-      
-      // Allow scrolling past when we reach the last step
-      if (newActiveStep === 4 && value > 0.9) {
-        setAllowScroll(true);
-      }
-      
-      // Only update if we've reached a new milestone
-      if (newActiveStep !== activeStep && newActiveStep <= 4) {
-        setActiveStep(newActiveStep);
-      }
-    });
+    setIsMounted(true);
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
     
-    return () => unsubscribe();
-  }, [scrollYProgress, activeStep]);
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
 
-  return (
-    <>
-      {/* Registration Process Section */}
-      <section ref={containerRef} className="h-[500vh] bg-gradient-to-br from-slate-50 via-blue-50 to-white relative">
-        <div className="sticky top-0 h-screen flex items-center justify-center">
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            
-            {/* Left Side - Static with moving airplane */}
-            <div className="relative h-[500px] flex flex-col justify-between">
-              {/* Track line */}
-              <div className="absolute left-8 top-4 bottom-4 w-1 bg-gray-200 rounded-full" />
-              
-              {/* Animated Airplane */}
-              <motion.div
-                className="absolute left-4 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg z-10"
-                style={{ y: airplaneY }}
-                transition={{ type: "spring", stiffness: 100, damping: 30 }}
-              >
-                <Plane className="w-4 h-4 text-white rotate-90" />
-              </motion.div>
-
-              {/* Static Steps */}
-              <div className="h-full flex flex-col justify-between py-4">
-                {steps.map((step, index) => (
-                  <div key={step.id} className="flex items-center space-x-4 h-[100px] relative">
-                    <div
-                      className={`w-14 h-14 rounded-full flex items-center justify-center border-4 transition-all duration-500 z-10 bg-white ${
-                        activeStep > step.id 
-                          ? 'border-green-500' 
-                          : activeStep === step.id 
-                          ? 'border-blue-600 ring-4 ring-blue-200' 
-                          : 'border-gray-300'
-                      }`}
-                    >
-                      {activeStep > step.id ? (
-                        <CheckCircle className="w-6 h-6 text-green-500" />
-                      ) : (
-                        <step.icon 
-                          className={`w-6 h-6 ${
-                            activeStep === step.id ? 'text-blue-600' : 'text-gray-400'
-                          }`} 
-                        />
-                      )}
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h3 className={`font-semibold text-lg transition-colors duration-300 ${
-                        activeStep >= step.id ? 'text-blue-600' : 'text-gray-600'
-                      }`}>
-                        Step {step.id}: {step.title}
-                      </h3>
-                      <p className={`text-sm mt-1 transition-colors duration-300 ${
-                        activeStep >= step.id ? 'text-gray-700' : 'text-gray-500'
-                      }`}>
-                        {step.description.substring(0, 60)}...
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right Side - Changes only on milestone reached */}
-            <div className="h-[500px] flex items-center">
-              <motion.div
-                key={activeStep} // This ensures re-render only when activeStep changes
-                initial={{ opacity: 0, scale: 0.95, x: 30 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                transition={{ 
-                  duration: 0.8, 
-                  ease: [0.25, 0.46, 0.45, 0.94] // Custom easing
-                }}
-                className="w-full h-full"
-              >
-                <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-2xl ring-2 ring-blue-500/20">
-                  {/* Loading placeholder */}
-                  {!imageLoaded[activeStep] && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-purple-100 animate-pulse" />
-                  )}
-                  
-                  {/* Background Image */}
-                  <Image
-                    src={steps[activeStep - 1]?.image || ''}
-                    alt={steps[activeStep - 1]?.title || ''}
-                    fill
-                    className={`object-cover transition-all duration-500 ${imageLoaded[activeStep] ? 'opacity-100' : 'opacity-0'}`}
-                    priority={true}
-                    quality={85}
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    onLoad={() => setImageLoaded(prev => ({ ...prev, [activeStep]: true }))}
-                  />
-                  
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-
-                  {/* Step Badge */}
-                  <div className="absolute top-6 left-6">
-                    <motion.div
-                      initial={{ y: -20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.3 }}
-                      className={`px-4 py-2 rounded-full bg-gradient-to-r ${steps[activeStep - 1]?.color} text-white font-semibold shadow-lg`}
-                    >
-                      Step {activeStep} of {steps.length}
-                    </motion.div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="absolute bottom-8 left-6 right-6 text-white">
-                    <motion.div
-                      initial={{ y: 30, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      <h4 className="text-3xl font-bold mb-4">{steps[activeStep - 1]?.title}</h4>
-                      <p className="text-lg opacity-90 mb-6 leading-relaxed">
-                        {steps[activeStep - 1]?.description}
-                      </p>
-                      <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 text-white font-medium">
-                        {steps[activeStep - 1]?.icon && (() => {
-                          const IconComponent = steps[activeStep - 1].icon;
-                          return <IconComponent className="w-4 h-4 mr-2" />;
-                        })()}
-                        {steps[activeStep - 1]?.action}
-                      </div>
-                    </motion.div>
+  // Return loading state during SSR
+  if (!isMounted) {
+    return (
+      <section className="py-12 sm:py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded mb-4 mx-auto w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded mb-8 mx-auto w-1/2"></div>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 mb-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="h-6 bg-gray-200 rounded mb-2 w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-8 bg-gray-200 rounded w-32"></div>
                   </div>
                 </div>
-              </motion.div>
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
+    );
+  }
 
-      {/* Content below the registration process */}
-      <section className="min-h-screen relative flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <Image
-          src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1920&q=80"
-          alt="Travel destination"
-          fill
-          className="object-cover"
-          quality={90}
-          sizes="100vw"
-        />
-        
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/70" />
-        
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-          <motion.h2 
-            className="text-4xl lg:text-6xl font-bold text-white mb-6"
-            initial={{ y: 30, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
+  if (isMobile) {
+    // Mobile-friendly version - simple vertical layout
+    return (
+      <section className="py-12 sm:py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          {/* Section Header */}
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            Ready to Start Your Journey?
-          </motion.h2>
-          <motion.p 
-            className="text-xl lg:text-2xl text-white/90 mb-8"
-            initial={{ y: 30, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            Join thousands of travelers who have discovered amazing destinations with Let's Fly Off.
-          </motion.p>
-          <motion.button 
-            className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-full hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
-            initial={{ y: 30, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
+            <h2 className="font-seasons text-3xl sm:text-4xl font-light text-gray-900 mb-4">
+              How to Join Our 
+              <span className="block bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
+                Exclusive Community
+              </span>
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Follow these simple steps to become part of our elite travel community
+            </p>
+          </motion.div>
+
+          {/* Steps */}
+          <div className="space-y-6">
+            {steps.map((step, index) => (
+              <motion.div
+                key={step.id}
+                className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <div className="flex items-start space-x-4">
+                  {/* Step Number & Icon */}
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2">
+                      {step.id}
+                    </div>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-r ${step.color}`}>
+                      <step.icon className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-xl text-gray-900 mb-2">
+                      {step.title}
+                    </h3>
+                    <p className="text-gray-600 mb-4 leading-relaxed">
+                      {step.description}
+                    </p>
+                    <div className="inline-flex items-center px-4 py-2 bg-gray-100 rounded-full text-sm font-medium text-gray-700">
+                      <step.icon className="w-4 h-4 mr-2" />
+                      {step.action}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <motion.div
+            className="text-center mt-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
             viewport={{ once: true }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
-            Get Started Now
-          </motion.button>
+            <button className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-full hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg">
+              Request Invitation
+            </button>
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
+
+  // Desktop version - keep the original complex layout
+  return (
+    <>
+      {/* Registration Process Section */}
+      <section className="py-20 lg:py-32 bg-gradient-to-br from-slate-50 via-blue-50 to-white">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Left Side - Steps */}
+          <div className="space-y-8">
+            <div className="text-center lg:text-left">
+              <h2 className="font-seasons text-4xl lg:text-5xl font-light text-gray-900 mb-4">
+                Join Our 
+                <span className="block bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
+                  Elite Community
+                </span>
+              </h2>
+              <p className="text-xl text-gray-600 leading-relaxed">
+                Follow these steps to become part of our exclusive travel experiences
+              </p>
+            </div>
+
+            {steps.map((step, index) => (
+              <motion.div
+                key={step.id}
+                className="flex items-start space-x-4"
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    {step.id}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-xl text-gray-900 mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="text-gray-600 mb-3 leading-relaxed">
+                    {step.description}
+                  </p>
+                  <div className="inline-flex items-center px-4 py-2 bg-gray-100 rounded-full text-sm font-medium text-gray-700">
+                    <step.icon className="w-4 h-4 mr-2" />
+                    {step.action}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Right Side - Visual */}
+          <motion.div
+            className="relative h-96 lg:h-[500px]"
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-2xl">
+              <Image
+                src={steps[0].image}
+                alt="Registration process"
+                fill
+                className="object-cover"
+                priority
+                quality={85}
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              
+              <div className="absolute bottom-8 left-6 right-6 text-white">
+                <h4 className="text-2xl font-bold mb-2">Ready to Start Your Journey?</h4>
+                <p className="text-white/90 mb-4">
+                  Join thousands of travelers who have discovered amazing destinations with Let's Fly Off.
+                </p>
+                <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-full hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
+                  Get Started Now
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
     </>
